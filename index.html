@@ -1,167 +1,183 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Jump & Survive</title>
-  <style>
-    #btn1, #btn2, #start {
-      position: absolute;
-      width: 11vh;
-      height: 7vh;
-      background-color: maroon;
-      color: white;
-    }
-    #Restart {
-      position: absolute;
-      width: 11vh;
-      height: 7vh;
-      background-color: maroon;
-      color: white;
-    }
-    #btn1 { bottom: 1vh; left: 1vh; }
-    #btn2 { bottom: 1vh; right: 10vh; }
-    #start { bottom: 51vh; right: 24vh; }
-    #score { position: absolute; top: 1vh; right: 1vh; }
-    #Restart { position: absolute; bottom: 51vh; right: 24vh; visibility: hidden; }
-  </style>
-</head>
-<body>
+  <head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1"> 
+    <title>Sifra AI Assistant - Smart Chatbot</title>
 
-  <button id="start">Start</button>
-  <button id="btn1">></button>
-  <button id="btn2">Jump</button>
-  <audio id="GameOver" src="seagullhit.ogg"></audio>
-  <button id="Restart" onclick="Reset()">Restart</button>
-  <h1 id="score">Score : 0</h1>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sifra AI is a smart and fast chatbot assistant that answers your questions instantly using DuckDuckGo. Try it now!">
+    <meta name="keywords" content="Sifra AI, AI assistant, chatbot, smart assistant, online AI, question answer bot, DuckDuckGo chatbot">
+    <meta name="author" content="Vansh Saini">
+    <meta name="robots" content="index, follow">
 
-  <script src="https://unpkg.com/kaboom@3000.0.0-beta.5/dist/kaboom.js"></script>
-  <script>
-    kaboom({
-      background: [210, 210, 255],
-      font: "sink"
-    });
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:title" content="Sifra AI Assistant">
+    <meta property="og:description" content="Sifra is your smart AI chatbot assistant that replies instantly and helps you find answers.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourdomain.com"> <!-- Replace with your domain -->
+    <meta property="og:image" content="https://yourdomain.com/sifra-preview.png"> <!-- Optional image -->
 
-    loadSprite("player", "player.png");
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.png" type="image/x-icon">
 
-    // Global game variables
-    let player;
-    let isGameOver = false;
-    let JUMPCOUNT = 0;
-    let score = 0;
+    <style>
+      body {
+        background-color: black;
+        margin: 0;
+        font-family: sans-serif;
+        color: white;
+      }
 
-    const SPEED = 560;
-    let ESPEED = 162;
-    const JUMPFORCE = 800;
-    const GRAVITY = 1600;
-    const PLATFORM_HEIGHT = 56;
-    const MAX_JUMP = 2;
+      #header {
+        text-align: center;
+        color: red;
+        margin-top: 20px;
+        font-size: 6.9vh;
+      }
 
-    setGravity(GRAVITY);
+      #inputbox {
+        position: fixed;
+        bottom: 16vh;
+        left: 1.6vh;
+        width: 50vh;
+        height: 5.2vh;
+        font-size: 2vh;
+        padding: 0 1vh;
+      }
 
-    scene("game", () => {
-      isGameOver = false;
-      score = 0;
-      JUMPCOUNT = 0;
-      document.getElementById("score").innerText = "Score : 0";
+      #Ask {
+        position: fixed;
+        bottom: 7vh;
+        background-color: green;
+        color: black;
+        width: 9.5vh;
+        height: 5.6vh;
+        left: 26vh;
+        border-radius: 1.2vh;
+        border: none;
+        font-size: 2vh;
+        cursor: pointer;
+      }
 
-      player = add([
-        sprite("player"),
-        pos(10, height() - PLATFORM_HEIGHT - 90),
-        scale(0.10),
-        area(),
-        body(),
-        "player"
-      ]);
+      #Ask:active {
+        background-color: yellow;
+        color: black;
+      }
 
-      add([
-        rect(width(), PLATFORM_HEIGHT),
-        pos(0, height() - PLATFORM_HEIGHT),
-        color(100, 200, 100),
-        area(),
-        body({ isStatic: true })
-      ]);
+      #chat {
+        margin-top: 20px;
+        padding: 10px;
+        overflow-y: auto;
+        max-height: 65vh;
+        display: flex;
+        flex-direction: column;
+      }
 
-      const scoreBox = add([
-        rect(25, 35),
-        pos(5, 453),
-        scale(1),
-        area(),
-        opacity(0),
-        "Score"
-      ]);
+      .user_msg, .ai_msg {
+        max-width: 70%;
+        padding: 10px;
+        border-radius: 10px;
+        margin: 10px 0;
+      }
 
-      const enemyLoop = loop(4, () => {
-        if (isGameOver) return;
+      .user_msg {
+        background-color: red;
+        border: 2px solid brown;
+        align-self: flex-start;
+      }
 
-        const enemy = add([
-          rect(25, 35),
-          pos(400, 453),
-          scale(1),
-          area(),
-          "enemy"
-        ]);
+      .ai_msg {
+        background-color: green;
+        border: 2px solid brown;
+        align-self: flex-end;
+      }
 
-        enemy.onUpdate(() => {
-          enemy.move(-ESPEED, 0);
-        });
+      /* Welcome animation styling */
+      #welcome-animation {
+        color: lime;
+        font-size: 4vh;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 20vh;
+        animation: pulse 2s infinite ease-in-out;
+        user-select: none;
+      }
 
-        enemy.onCollide("player", () => {
-          if (!isGameOver) {
-            destroy(player);
-            isGameOver = true;
-            addKaboom(player.pos);
-            document.getElementById("GameOver").play();
-            console.log("Collision successful");
-            document.getElementById("Restart").style.visibility = "visible";
-          }
-        });
-
-        scoreBox.onCollide("enemy", () => {
-          if (!isGameOver) {
-            score++;
-            ESPEED += 1.21
-            document.getElementById("score").innerText = "Score : " + score;
-          }
-        });
-      });
-
-      player.onUpdate(() => {
-        if (player.isGrounded()) JUMPCOUNT = 0;
-        if (player.pos.y > height() + 100) {
-          player.pos = vec2(80, height() - PLATFORM_HEIGHT - 100);
-          player.jump(JUMPFORCE / 2);
+      @keyframes pulse {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 1;
         }
-      });
-    });
-
-    // Button Functions
-    function Reset(){
-      go("game")
-      document.getElementById("Restart").style.visibility = "hidden";
-    }
-    function startGame() {
-      go("game")
-      document.getElementById("start").style.visibility = "hidden";
-    }
-
-    function right() {
-      if (!isGameOver && player) {
-        player.move(SPEED, 0);
+        50% {
+          transform: scale(1.1);
+          opacity: 0.7;
+        }
       }
-    }
+    </style>
+  </head> 
 
-    function jump() {
-      if (!isGameOver && player && JUMPCOUNT < MAX_JUMP) {
-        player.jump(JUMPFORCE);
-        JUMPCOUNT++;
+  <body> 
+    <h1 id="header">Sifra AI</h1>
+
+    <input id="inputbox" type="text" placeholder="Ask any question.">
+    <button id="Ask" onclick="Ask()">Ask</button>
+
+    <div id="chat">
+      <div id="welcome-animation">Welcome to Sifra AI! Start chatting below...</div>
+    </div>
+
+    <script>
+      function Ask() {
+        const input = document.getElementById("inputbox").value.toLowerCase().trim();
+        if (!input) return;
+
+        const chatBox = document.getElementById("chat");
+        const welcomeAnimation = document.getElementById("welcome-animation");
+
+        if (welcomeAnimation) {
+          welcomeAnimation.style.display = "none";
+        }
+
+        const userMsg = document.createElement("div");
+        userMsg.className = "user_msg";
+        userMsg.textContent = "You: " + input;
+        chatBox.appendChild(userMsg);
+
+        const aiMsg = document.createElement("div");
+        aiMsg.className = "ai_msg";
+        aiMsg.textContent = "Sifra: Thinking...";
+        chatBox.appendChild(aiMsg);
+
+        const responses = {
+          "hi": "Hello! I am Sifra.",
+          "how are you": "I'm just code, but I'm doing great!",
+          "who are you": "I am Sifra, your AI chatbot.",
+          "bye": "Goodbye! See you soon.",
+          "what is your name": "I'm called Sifra AI!"
+        };
+
+        if (responses[input]) {
+          aiMsg.textContent = "Sifra: " + responses[input];
+        } else {
+          fetch("https://api.duckduckgo.com/?q=" + encodeURIComponent(input) + "&format=json&no_html=1&skip_disambig=1")
+            .then(res => res.json())
+            .then(data => {
+              if (data.Abstract) {
+                aiMsg.textContent = "Sifra: " + data.Abstract;
+              } else {
+                aiMsg.textContent = "Sifra: Sorry, I couldn’t find anything useful.";
+                window.open("https://en.wikipedia.org/wiki/Special:Search?search=" + encodeURIComponent(input), "_blank");
+              }
+            })
+            .catch(() => {
+              aiMsg.textContent = "Sifra: Error fetching answer.";
+            });
+        }
+
+        document.getElementById("inputbox").value = "";
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
-    }
-
-    // Connect buttons to functions
-    document.getElementById("start").onclick = startGame;
-    document.getElementById("btn1").onclick = right;
-    document.getElementById("btn2").onclick = jump;
-  </script>
-</body>
+    </script>
+  </body>
 </html>
