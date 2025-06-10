@@ -1,25 +1,16 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head> 
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1"> 
     <title>Sifra AI Assistant - Smart Chatbot</title>
 
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Sifra AI is a smart and fast chatbot assistant that answers your questions instantly using DuckDuckGo. Try it now!">
-    <meta name="keywords" content="Sifra AI, AI assistant, chatbot, smart assistant, online AI, question answer bot, DuckDuckGo chatbot">
+    <meta name="description" content="Sifra AI is a smart chatbot that answers your questions using DuckDuckGo and can suggest image searches.">
+    <meta name="keywords" content="Sifra AI, AI assistant, chatbot, smart assistant, question answer bot">
     <meta name="author" content="Vansh Saini">
-    <meta name="robots" content="index, follow">
 
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:title" content="Sifra AI Assistant">
-    <meta property="og:description" content="Sifra is your smart AI chatbot assistant that replies instantly and helps you find answers.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://yourdomain.com"> <!-- Replace with your domain -->
-    <meta property="og:image" content="https://yourdomain.com/sifra-preview.png"> <!-- Optional image -->
-
-    <!-- Favicon -->
     <link rel="icon" href="favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
       body {
@@ -93,7 +84,6 @@
         align-self: flex-end;
       }
 
-      /* Welcome animation styling */
       #welcome-animation {
         color: lime;
         font-size: 4vh;
@@ -105,14 +95,8 @@
       }
 
       @keyframes pulse {
-        0%, 100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: scale(1.1);
-          opacity: 0.7;
-        }
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.7; }
       }
     </style>
   </head> 
@@ -129,24 +113,22 @@
 
     <script>
       function Ask() {
-        const input = document.getElementById("inputbox").value.toLowerCase().trim();
+        const input = document.getElementById("inputbox").value.trim();
         if (!input) return;
 
+        const lowerInput = input.toLowerCase();
         const chatBox = document.getElementById("chat");
         const welcomeAnimation = document.getElementById("welcome-animation");
-
-        if (welcomeAnimation) {
-          welcomeAnimation.style.display = "none";
-        }
+        if (welcomeAnimation) welcomeAnimation.style.display = "none";
 
         const userMsg = document.createElement("div");
         userMsg.className = "user_msg";
-        userMsg.textContent = "You: " + input;
+        userMsg.innerHTML = `<i class="fa-solid fa-user" style="margin-right: 8px;"></i>You: ${input}`;
         chatBox.appendChild(userMsg);
 
         const aiMsg = document.createElement("div");
         aiMsg.className = "ai_msg";
-        aiMsg.textContent = "Sifra: Thinking...";
+        aiMsg.innerHTML = `<i class="fa-solid fa-robot" style="margin-right: 8px;"></i>Sifra: Thinking...`;
         chatBox.appendChild(aiMsg);
 
         const responses = {
@@ -157,9 +139,34 @@
           "what is your name": "I'm called Sifra AI!"
         };
 
-        if (responses[input]) {
-          aiMsg.textContent = "Sifra: " + responses[input];
-        } else {
+        // Predefined response
+        if (responses[lowerInput]) {
+          aiMsg.textContent = "Sifra: " + responses[lowerInput];
+        }
+
+        // Image generation
+        else if (lowerInput.startsWith("generate image of")) {
+          const topic = lowerInput.replace("generate image of", "").trim();
+          if (!topic) {
+            aiMsg.textContent = `Sifra: Please enter a topic, like "Generate image of cat" or "Generate image of sunset".`;
+          } else {
+            aiMsg.innerHTML = `<i class="fa-solid fa-robot" style="margin-right: 8px;"></i>Sifra: To generate an image of "${topic}", I’m opening Google Images.`;
+            const searchUrl = "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(topic);
+            window.open(searchUrl, "_blank");
+          }
+        }
+
+        // If it includes make/generate/create but not exact command
+        else if (
+          lowerInput.includes("make") ||
+          lowerInput.includes("generate") ||
+          lowerInput.includes("create")
+        ) {
+          aiMsg.innerHTML = `<i class="fa-solid fa-robot" style="margin-right: 8px;"></i>Sifra: If you want to generate real images, say: <b>"generate image of cat"</b> or <b>"generate image of lion"</b>.`;
+        }
+
+        // DuckDuckGo fallback
+        else {
           fetch("https://api.duckduckgo.com/?q=" + encodeURIComponent(input) + "&format=json&no_html=1&skip_disambig=1")
             .then(res => res.json())
             .then(data => {
